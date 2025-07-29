@@ -136,7 +136,7 @@ export default function Settings() {
               <CardTitle>Notifications</CardTitle>
               <CardDescription>
                 Configure how you receive notifications.
-              </description>
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
