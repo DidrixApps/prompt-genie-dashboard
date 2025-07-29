@@ -1,56 +1,97 @@
 import { useState } from 'react';
-import { Search, Grid, List, Code } from 'lucide-react';
+import { Search, Grid, List, Code, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { mockProjects } from '@/data/projects';
-import { ProjectStatus } from '@/types';
+import { Project, ProjectStatus } from '@/types';
 import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectListItem } from '@/components/ProjectListItem';
 import { NewProjectDialog } from '@/components/NewProjectDialog';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+
+const fetchProjects = async (userId: string): Promise<Project[]> => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  // The type from Supabase might not match exactly, so we cast it.
+  // This is safe as long as the table schema matches the Project type.
+  return data as Project[];
+};
+
+const deleteProject = async (projectId: number) => {
+  const { error } = await supabase.from('projects').delete().eq('id', projectId);
+  if (error) throw new Error(error.message);
+};
 
 export default function Projects() {
-  const [projects, setProjects] = useState(mockProjects);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<ProjectStatus | 'all'>('all');
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || project.status === filterStatus;
-    return matchesSearch && matchesFilter;
+  const { data: projects, isLoading, error } = useQuery({
+    queryKey: ['projects', user?.id],
+    queryFn: () => fetchProjects(user!.id),
+    enabled: !!user,
   });
 
-  const handleAction = (action: string, projectName: string) => {
-    toast({
-      title: `${action}d ${projectName}`,
-      description: `Successfully ${action.toLowerCase()}ed the project.`,
-    });
+  const deleteMutation = useMutation({
+    mutationFn: deleteProject,
+    onSuccess: () => {
+      toast({ title: "Project deleted", description: "The project has been successfully deleted." });
+      queryClient.invalidateQueries({ queryKey: ['projects', user?.id] });
+    },
+    onError: (err) => {
+      toast({ title: "Error deleting project", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleAction = (action: string, projectId: number, projectName: string) => {
     if (action === 'Delete') {
-      setProjects(projects.filter(p => p.name !== projectName));
+      deleteMutation.mutate(projectId);
+    } else {
+      toast({
+        title: `${action}d ${projectName}`,
+        description: `Successfully ${action.toLowerCase()}ed the project.`,
+      });
     }
   };
 
+  const filteredProjects = projects?.filter(project => {
+    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'all' || project.status === filterStatus;
+    return !!matchesSearch && matchesFilter;
+  }) ?? [];
+
   return (
     <div className="space-y-6">
-      <NewProjectDialog open={isNewProjectDialogOpen} onOpenChange={setIsNewProjectDialogOpen} />
+      <NewProjectDialog 
+        open={isNewProjectDialogOpen} 
+        onOpenChange={setIsNewProjectDialogOpen}
+        onProjectCreated={() => queryClient.invalidateQueries({ queryKey: ['projects', user?.id] })}
+      />
       
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">My Projects</h1>
           <p className="text-muted-foreground">Manage your AI-generated applications</p>
         </div>
-        
         <button onClick={() => setIsNewProjectDialogOpen(true)} className="btn-primary flex items-center space-x-2">
           <Code className="w-4 h-4" />
           <span>New Project</span>
         </button>
       </div>
 
-      {/* Filters */}
       <div className="glass-card rounded-xl p-4">
+        {/* Filter controls... */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -62,7 +103,6 @@ export default function Projects() {
               className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
             />
           </div>
-
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as ProjectStatus | 'all')}
@@ -73,63 +113,71 @@ export default function Projects() {
             <option value="ready">Ready</option>
             <option value="in-progress">In Progress</option>
           </select>
-
           <div className="flex bg-muted rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-background shadow-sm' : ''}`}
-            >
+            <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-background shadow-sm' : ''}`}>
               <Grid className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-background shadow-sm' : ''}`}
-            >
+            <button onClick={() => setViewMode('list')} className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-background shadow-sm' : ''}`}>
               <List className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Projects Grid/List */}
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <ProjectCard key={project.id} project={project} onAction={handleAction} />
-          ))}
-        </div>
-      ) : (
-        <div className="glass-card rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="text-left p-4 font-medium">Project</th>
-                  <th className="text-left p-4 font-medium">Status</th>
-                  <th className="text-left p-4 font-medium">Framework</th>
-                  <th className="text-left p-4 font-medium">Created</th>
-                  <th className="text-left p-4 font-medium">Downloads</th>
-                  <th className="text-left p-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProjects.map((project) => (
-                  <ProjectListItem key={project.id} project={project} onAction={handleAction} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {isLoading && (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       )}
 
-      {filteredProjects.length === 0 && (
-        <div className="text-center py-12">
-          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium mb-2">No projects found</h3>
-          <p className="text-muted-foreground">Try adjusting your search or filters</p>
+      {error && (
+        <div className="text-center py-12 text-destructive">
+          <p>Error loading projects: {error.message}</p>
         </div>
+      )}
+
+      {!isLoading && !error && (
+        <>
+          {viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => (
+                <ProjectCard key={project.id} project={project} onAction={(action, name) => handleAction(action, project.id, name)} />
+              ))}
+            </div>
+          ) : (
+            <div className="glass-card rounded-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-4 font-medium">Project</th>
+                      <th className="text-left p-4 font-medium">Status</th>
+                      <th className="text-left p-4 font-medium">Framework</th>
+                      <th className="text-left p-4 font-medium">Created</th>
+                      <th className="text-left p-4 font-medium">Downloads</th>
+                      <th className="text-left p-4 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProjects.map((project) => (
+                      <ProjectListItem key={project.id} project={project} onAction={(action, name) => handleAction(action, project.id, name)} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {filteredProjects.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">No projects found</h3>
+              <p className="text-muted-foreground">Try creating a new project to get started.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

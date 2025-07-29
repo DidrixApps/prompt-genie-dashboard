@@ -1,6 +1,7 @@
 import { Project } from '@/types';
 import { getStatusColor } from '@/lib/utils';
 import { Smartphone, Eye, Edit, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ProjectListItemProps {
   project: Project;
@@ -26,8 +27,8 @@ export function ProjectListItem({ project, onAction }: ProjectListItemProps) {
           {project.status}
         </span>
       </td>
-      <td className="p-4 text-sm">{project.framework}</td>
-      <td className="p-4 text-sm text-muted-foreground">{project.createdAt}</td>
+      <td className="p-4 text-sm">{project.framework || 'N/A'}</td>
+      <td className="p-4 text-sm text-muted-foreground">{format(new Date(project.created_at), 'MMM d, yyyy')}</td>
       <td className="p-4 text-sm">{project.downloads}</td>
       <td className="p-4">
         <div className="flex items-center space-x-2">

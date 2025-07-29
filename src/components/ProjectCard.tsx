@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { format } from 'date-fns';
 
 interface ProjectCardProps {
   project: Project;
@@ -50,13 +51,13 @@ export function ProjectCard({ project, onAction }: ProjectCardProps) {
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
             {project.status}
           </span>
-          <span className="text-xs text-muted-foreground">{project.framework}</span>
+          <span className="text-xs text-muted-foreground">{project.framework || 'N/A'}</span>
         </div>
 
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center space-x-1">
             <Calendar className="w-3 h-3" />
-            <span>{project.createdAt}</span>
+            <span>{format(new Date(project.created_at), 'MMM d, yyyy')}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Download className="w-3 h-3" />
