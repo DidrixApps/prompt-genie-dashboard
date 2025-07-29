@@ -15,10 +15,10 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
-  { name: 'Projects', href: '/projects', icon: FolderOpen },
-  { name: 'Templates', href: '/templates', icon: Code },
-  { name: 'Community', href: '/community', icon: Users },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Projects', href: '/projects/', icon: FolderOpen },
+  { name: 'Templates', href: '/templates/', icon: Code },
+  { name: 'Community', href: '/community/', icon: Users },
+  { name: 'Settings', href: '/settings/', icon: Settings },
 ];
 
 interface SidebarProps {

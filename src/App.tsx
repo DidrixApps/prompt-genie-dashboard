@@ -25,13 +25,13 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <Routes>
-              <Route path="/login" element={<Login />} />
+              <Route path="/login/" element={<Login />} />
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/projects" element={<Projects />} />
-                <Route path="/templates" element={<Templates />} />
-                <Route path="/community" element={<Community />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/projects/" element={<Projects />} />
+                <Route path="/templates/" element={<Templates />} />
+                <Route path="/community/" element={<Community />} />
+                <Route path="/settings/" element={<Settings />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

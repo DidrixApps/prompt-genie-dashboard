@@ -21,7 +21,7 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate('/login');
+    navigate('/login/');
   };
 
   const userName = user?.user_metadata?.full_name || user?.email || 'User';
