@@ -19,16 +19,55 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { useState, useEffect } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
   const { setTheme } = useTheme();
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const handleSave = (section: string) => {
+  const [fullName, setFullName] = useState('');
+
+  useEffect(() => {
+    if (user?.user_metadata?.full_name) {
+      setFullName(user.user_metadata.full_name);
+    }
+  }, [user]);
+
+  const { mutate: updateProfile, isPending: isUpdatingProfile } = useMutation({
+    mutationFn: async (newName: string) => {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: newName },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Profile updated!",
+        description: "Your name has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleProfileSave = () => {
+    if (fullName.trim()) {
+      updateProfile(fullName);
+    }
+  };
+  
+  const handleSavePreferences = () => {
     toast({
-      title: `${section} settings saved!`,
-      description: "Your preferences have been updated successfully.",
+      title: "Preferences saved!",
+      description: "Your notification settings have been updated.",
     });
   };
 
@@ -61,7 +100,11 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue={user?.user_metadata?.full_name || ''} />
+                <Input 
+                  id="name" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -69,7 +112,9 @@ export default function Settings() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleSave("Profile")}>Save Changes</Button>
+              <Button onClick={handleProfileSave} disabled={isUpdatingProfile}>
+                {isUpdatingProfile ? "Saving..." : "Save Changes"}
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -93,7 +138,7 @@ export default function Settings() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleSave("API Key")}>Save Key</Button>
+              <Button onClick={() => toast({ title: "This feature is coming soon!" })}>Save Key</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -159,7 +204,7 @@ export default function Settings() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button onClick={() => handleSave("Notification")}>Save Preferences</Button>
+              <Button onClick={handleSavePreferences}>Save Preferences</Button>
             </CardFooter>
           </Card>
         </TabsContent>
