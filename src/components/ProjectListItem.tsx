@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 
 interface ProjectListItemProps {
   project: Project;
-  onAction: (action: string, projectName: string) => void;
+  onAction: (action: string, projectId: number) => void;
 }
 
 export function ProjectListItem({ project, onAction }: ProjectListItemProps) {
@@ -32,13 +32,13 @@ export function ProjectListItem({ project, onAction }: ProjectListItemProps) {
       <td className="p-4 text-sm">{project.downloads}</td>
       <td className="p-4">
         <div className="flex items-center space-x-2">
-          <button onClick={() => onAction('View', project.name)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <button onClick={() => onAction('View', project.id)} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <Eye className="w-4 h-4" />
           </button>
-          <button onClick={() => onAction('Edit', project.name)} className="p-2 hover:bg-muted rounded-lg transition-colors">
+          <button onClick={() => onAction('Edit', project.id)} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <Edit className="w-4 h-4" />
           </button>
-          <button onClick={() => onAction('Delete', project.name)} className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors">
+          <button onClick={() => onAction('Delete', project.id)} className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition-colors">
             <Trash2 className="w-4 h-4" />
           </button>
         </div>

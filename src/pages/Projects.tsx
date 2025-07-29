@@ -17,8 +17,6 @@ const fetchProjects = async (userId: string): Promise<Project[]> => {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  // The type from Supabase might not match exactly, so we cast it.
-  // This is safe as long as the table schema matches the Project type.
   return data as Project[];
 };
 
@@ -53,13 +51,13 @@ export default function Projects() {
     },
   });
 
-  const handleAction = (action: string, projectId: number, projectName: string) => {
+  const handleAction = (action: string, projectId: number) => {
     if (action === 'Delete') {
       deleteMutation.mutate(projectId);
     } else {
       toast({
-        title: `${action}d ${projectName}`,
-        description: `Successfully ${action.toLowerCase()}ed the project.`,
+        title: `Action: ${action}`,
+        description: `This action is not yet implemented for project ID ${projectId}.`,
       });
     }
   };
@@ -141,7 +139,7 @@ export default function Projects() {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project) => (
-                <ProjectCard key={project.id} project={project} onAction={(action, name) => handleAction(action, project.id, name)} />
+                <ProjectCard key={project.id} project={project} onAction={handleAction} />
               ))}
             </div>
           ) : (
@@ -160,7 +158,7 @@ export default function Projects() {
                   </thead>
                   <tbody>
                     {filteredProjects.map((project) => (
-                      <ProjectListItem key={project.id} project={project} onAction={(action, name) => handleAction(action, project.id, name)} />
+                      <ProjectListItem key={project.id} project={project} onAction={handleAction} />
                     ))}
                   </tbody>
                 </table>

@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 
 interface ProjectCardProps {
   project: Project;
-  onAction: (action: string, projectName: string) => void;
+  onAction: (action: string, projectId: number) => void;
 }
 
 export function ProjectCard({ project, onAction }: ProjectCardProps) {
@@ -28,13 +28,13 @@ export function ProjectCard({ project, onAction }: ProjectCardProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onAction('View', project.name)}>
+            <DropdownMenuItem onClick={() => onAction('View', project.id)}>
               <Eye className="w-4 h-4 mr-2" /> View
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAction('Edit', project.name)}>
+            <DropdownMenuItem onClick={() => onAction('Edit', project.id)}>
               <Edit className="w-4 h-4 mr-2" /> Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onAction('Delete', project.name)} className="text-destructive">
+            <DropdownMenuItem onClick={() => onAction('Delete', project.id)} className="text-destructive">
               <Trash2 className="w-4 h-4 mr-2" /> Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
