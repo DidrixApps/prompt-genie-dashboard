@@ -1,6 +1,5 @@
 import { AIPromptBuilder } from '@/components/AIPromptBuilder';
 import { MobilePreview } from '@/components/MobilePreview';
-import heroImage from '@/assets/hero-dashboard.jpg';
 import { Zap, Users, Code, Rocket, TrendingUp, Clock } from 'lucide-react';
 
 export default function Dashboard() {
@@ -16,11 +15,6 @@ export default function Dashboard() {
       {/* Hero Section */}
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="relative h-48 md:h-64">
-          <img 
-            src={heroImage} 
-            alt="AI Dashboard" 
-            className="w-full h-full object-cover"
-          />
           <div className="absolute inset-0 bg-gradient-to-r from-primary/80 to-[hsl(242,74%,62%)]/80 flex items-center">
             <div className="p-8 text-white">
               <h1 className="text-3xl md:text-4xl font-bold mb-4">
