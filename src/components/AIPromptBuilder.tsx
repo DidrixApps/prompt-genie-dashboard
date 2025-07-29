@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Send, Wand2, Save, Eye, Rocket, Sparkles, MessageSquare, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import FormattedAIResponse from '@/components/FormattedAIResponse';
 
 export function AIPromptBuilder() {
   const [prompt, setPrompt] = useState('');
@@ -145,11 +146,7 @@ This app will be production-ready with industry best practices. Would you like m
               <span className="text-muted-foreground">AI is thinking...</span>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none">
-              <pre className="whitespace-pre-wrap text-sm leading-relaxed text-foreground font-sans">
-                {response}
-              </pre>
-            </div>
+            <FormattedAIResponse content={response} />
           )}
         </div>
       )}
