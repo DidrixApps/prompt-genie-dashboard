@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { AIPromptBuilder } from '@/components/AIPromptBuilder';
 import { MobilePreview } from '@/components/MobilePreview';
-import { Zap, Users, Code, Rocket, TrendingUp, Clock, Loader2 } from 'lucide-react';
+import { Zap, Rocket, TrendingUp, Clock, Loader2, CheckCircle, Download } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Project } from '@/types';
@@ -29,6 +29,21 @@ const fetchProjectCount = async (userId: string): Promise<number> => {
     return count ?? 0;
 };
 
+interface UserStats {
+  total_downloads: number;
+  deployed_count: number;
+  in_progress_count: number;
+}
+
+const fetchUserStats = async (userId: string): Promise<UserStats> => {
+  const { data, error } = await supabase
+    .rpc('get_user_stats', { p_user_id: userId })
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   
@@ -44,11 +59,17 @@ export default function Dashboard() {
     enabled: !!user,
   });
 
+  const { data: userStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['userStats', user?.id],
+    queryFn: () => fetchUserStats(user!.id),
+    enabled: !!user,
+  });
+
   const stats = [
-    { label: 'Apps Created', value: isLoadingCount ? <Loader2 className="w-5 h-5 animate-spin" /> : projectCount, icon: Rocket, change: '+12%' },
-    { label: 'Active Users', value: '8.5k', icon: Users, change: '+8%' },
-    { label: 'Code Generated', value: '2.1M', icon: Code, change: '+23%' },
-    { label: 'Deploy Time', value: '2.3s', icon: Clock, change: '-5%' },
+    { label: 'Apps Created', value: isLoadingCount ? <Loader2 className="w-5 h-5 animate-spin" /> : projectCount, icon: Rocket },
+    { label: 'Apps Deployed', value: isLoadingStats ? <Loader2 className="w-5 h-5 animate-spin" /> : userStats?.deployed_count, icon: CheckCircle },
+    { label: 'Total Downloads', value: isLoadingStats ? <Loader2 className="w-5 h-5 animate-spin" /> : userStats?.total_downloads, icon: Download },
+    { label: 'In Progress', value: isLoadingStats ? <Loader2 className="w-5 h-5 animate-spin" /> : userStats?.in_progress_count, icon: Clock },
   ];
 
   return (
@@ -87,10 +108,6 @@ export default function Dashboard() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
                 <p className="text-2xl font-bold">{stat.value}</p>
-                <p className="text-sm text-green-600 flex items-center mt-1">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  {stat.change}
-                </p>
               </div>
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                 <stat.icon className="w-6 h-6 text-primary" />
