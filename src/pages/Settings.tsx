@@ -18,10 +18,12 @@ import {
 } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Settings() {
   const { setTheme } = useTheme();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSave = (section: string) => {
     toast({
@@ -59,11 +61,11 @@ export default function Settings() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="John Doe" />
+                <Input id="name" defaultValue={user?.user_metadata?.full_name || ''} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="john@example.com" />
+                <Input id="email" type="email" defaultValue={user?.email} disabled />
               </div>
             </CardContent>
             <CardFooter>
@@ -134,7 +136,7 @@ export default function Settings() {
               <CardTitle>Notifications</CardTitle>
               <CardDescription>
                 Configure how you receive notifications.
-              </CardDescription>
+              </description>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">

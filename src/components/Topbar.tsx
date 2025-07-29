@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Bell, User, Search, Zap, Menu } from 'lucide-react';
+import { Moon, Sun, Bell, User, Search, Zap, Menu, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
@@ -13,6 +16,15 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
+  const userName = user?.user_metadata?.full_name || user?.email || 'User';
 
   return (
     <header
@@ -103,7 +115,7 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
                 <User className="w-4 h-4 text-white" />
               </div>
               <div className="text-left hidden sm:block">
-                <p className="text-sm font-medium">John Doe</p>
+                <p className="text-sm font-medium">{userName}</p>
                 <p className="text-xs text-muted-foreground">Pro Plan</p>
               </div>
             </button>
@@ -115,8 +127,8 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-semibold">John Doe</p>
-                    <p className="text-sm text-muted-foreground">john@example.com</p>
+                    <p className="font-semibold">{userName}</p>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
                   </div>
                 </div>
                 
@@ -139,7 +151,8 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
                     Help & Support
                   </button>
                   <hr className="my-2 border-border" />
-                  <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-destructive">
+                  <button onClick={handleSignOut} className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors text-destructive flex items-center">
+                    <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
                   </button>
                 </div>
