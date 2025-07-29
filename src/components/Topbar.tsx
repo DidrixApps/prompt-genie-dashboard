@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Bell, User, Search, Zap, Menu, LogOut } from 'lucide-react';
+import { Moon, Sun, Bell, User, Search, Zap, Menu, LogOut, UserCog, CreditCard, LifeBuoy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
@@ -18,10 +19,23 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
   const { theme, setTheme } = useTheme();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login/');
+  };
+
+  const handleNavigate = (path: string) => {
+    setShowProfile(false);
+    navigate(path);
+  };
+
+  const handleComingSoon = (feature: string) => {
+    toast({
+      title: `${feature} is coming soon!`,
+      description: "We're working hard to bring this feature to you.",
+    });
   };
 
   const userName = user?.user_metadata?.full_name || user?.email || 'User';
@@ -141,13 +155,16 @@ export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: Topbar
                 </div>
 
                 <div className="space-y-1">
-                  <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+                  <button onClick={() => handleNavigate('/settings/')} className="w-full flex items-center text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+                    <UserCog className="w-4 h-4 mr-2" />
                     Account Settings
                   </button>
-                  <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+                  <button onClick={() => handleComingSoon('Billing')} className="w-full flex items-center text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+                    <CreditCard className="w-4 h-4 mr-2" />
                     Billing
                   </button>
-                  <button className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+                  <button onClick={() => handleComingSoon('Help & Support')} className="w-full flex items-center text-left px-3 py-2 text-sm rounded-lg hover:bg-muted transition-colors">
+                    <LifeBuoy className="w-4 h-4 mr-2" />
                     Help & Support
                   </button>
                   <hr className="my-2 border-border" />
