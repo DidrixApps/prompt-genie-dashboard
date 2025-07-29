@@ -1,10 +1,51 @@
+import { useQuery } from '@tanstack/react-query';
 import { AIPromptBuilder } from '@/components/AIPromptBuilder';
 import { MobilePreview } from '@/components/MobilePreview';
-import { Zap, Users, Code, Rocket, TrendingUp, Clock } from 'lucide-react';
+import { Zap, Users, Code, Rocket, TrendingUp, Clock, Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Project } from '@/types';
+import { formatDistanceToNow } from 'date-fns';
+
+const fetchProjects = async (userId: string): Promise<Project[]> => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(3);
+
+  if (error) throw new Error(error.message);
+  return data as Project[];
+};
+
+const fetchProjectCount = async (userId: string): Promise<number> => {
+    const { count, error } = await supabase
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId);
+
+    if (error) throw new Error(error.message);
+    return count ?? 0;
+};
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  
+  const { data: recentProjects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ['recentProjects', user?.id],
+    queryFn: () => fetchProjects(user!.id),
+    enabled: !!user,
+  });
+
+  const { data: projectCount, isLoading: isLoadingCount } = useQuery({
+    queryKey: ['projectCount', user?.id],
+    queryFn: () => fetchProjectCount(user!.id),
+    enabled: !!user,
+  });
+
   const stats = [
-    { label: 'Apps Created', value: '1,247', icon: Rocket, change: '+12%' },
+    { label: 'Apps Created', value: isLoadingCount ? <Loader2 className="w-5 h-5 animate-spin" /> : projectCount, icon: Rocket, change: '+12%' },
     { label: 'Active Users', value: '8.5k', icon: Users, change: '+8%' },
     { label: 'Code Generated', value: '2.1M', icon: Code, change: '+23%' },
     { label: 'Deploy Time', value: '2.3s', icon: Clock, change: '-5%' },
@@ -76,30 +117,36 @@ export default function Dashboard() {
       <div className="glass-card rounded-2xl p-6">
         <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
         <div className="space-y-4">
-          {[
-            { action: 'Generated', app: 'Weather App', time: '2 minutes ago', status: 'completed' },
-            { action: 'Deployed', app: 'Todo Manager', time: '15 minutes ago', status: 'completed' },
-            { action: 'Created', app: 'Recipe Finder', time: '1 hour ago', status: 'in-progress' },
-          ].map((activity, index) => (
-            <div key={index} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className={`w-2 h-2 rounded-full ${
-                  activity.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'
-                }`}></div>
-                <div>
-                  <p className="font-medium">{activity.action} "{activity.app}"</p>
-                  <p className="text-sm text-muted-foreground">{activity.time}</p>
-                </div>
-              </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                activity.status === 'completed' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-              }`}>
-                {activity.status}
-              </span>
+          {isLoadingProjects ? (
+            <div className="flex justify-center items-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
-          ))}
+          ) : recentProjects && recentProjects.length > 0 ? (
+            recentProjects.map((activity) => (
+              <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    activity.status === 'deployed' ? 'bg-green-500' : 'bg-yellow-500'
+                  }`}></div>
+                  <div>
+                    <p className="font-medium">Created "{activity.name}"</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+                    </p>
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  activity.status === 'deployed' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                }`}>
+                  {activity.status}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-muted-foreground py-4">No recent activity found.</p>
+          )}
         </div>
       </div>
     </div>
