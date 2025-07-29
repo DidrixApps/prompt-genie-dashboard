@@ -1,14 +1,31 @@
-import { useState } from 'react';
-import { Key, User, Bell, Shield, Palette, Globe } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Settings() {
-  const [apiKey, setApiKey] = useState('');
+  const { setTheme } = useTheme();
   const { toast } = useToast();
 
-  const handleSave = () => {
+  const handleSave = (section: string) => {
     toast({
-      title: "Settings saved!",
+      title: `${section} settings saved!`,
       description: "Your preferences have been updated successfully.",
     });
   };
@@ -17,80 +34,134 @@ export default function Settings() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and API configuration</p>
+        <p className="text-muted-foreground">
+          Manage your account settings and preferences.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* API Configuration */}
-          <div className="glass-card rounded-xl p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <Key className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold">API Configuration</h2>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">OpenAI API Key</label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
-                  className="input-field w-full"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="api-keys">API Keys</TabsTrigger>
+          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        </TabsList>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+              <CardDescription>
+                Make changes to your public information here.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" defaultValue="John Doe" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" defaultValue="john@example.com" />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => handleSave("Profile")}>Save Changes</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* API Keys Tab */}
+        <TabsContent value="api-keys">
+          <Card>
+            <CardHeader>
+              <CardTitle>API Keys</CardTitle>
+              <CardDescription>
+                Manage your API keys for integrating with external services.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="openai-key">OpenAI API Key</Label>
+                <Input id="openai-key" type="password" placeholder="sk-..." />
+                <p className="text-xs text-muted-foreground">
                   Required for AI app generation. Your key is encrypted and secure.
                 </p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => handleSave("API Key")}>Save Key</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
 
-          {/* Profile Settings */}
-          <div className="glass-card rounded-xl p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <User className="w-5 h-5 text-primary" />
-              <h2 className="text-lg font-semibold">Profile</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Name</label>
-                <input type="text" defaultValue="John Doe" className="input-field w-full" />
+        {/* Appearance Tab */}
+        <TabsContent value="appearance">
+          <Card>
+            <CardHeader>
+              <CardTitle>Appearance</CardTitle>
+              <CardDescription>
+                Customize the look and feel of the application.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Theme</Label>
+                <p className="text-sm text-muted-foreground">
+                  Select the theme for the dashboard.
+                </p>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
-                <input type="email" defaultValue="john@example.com" className="input-field w-full" />
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setTheme("light")}>
+                  Light
+                </Button>
+                <Button variant="outline" onClick={() => setTheme("dark")}>
+                  Dark
+                </Button>
+                <Button variant="outline" onClick={() => setTheme("system")}>
+                  System
+                </Button>
               </div>
-            </div>
-          </div>
-        </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-3">
-              <button className="w-full btn-secondary justify-start">
-                <Bell className="w-4 h-4 mr-2" />
-                Notifications
-              </button>
-              <button className="w-full btn-secondary justify-start">
-                <Shield className="w-4 h-4 mr-2" />
-                Security
-              </button>
-              <button className="w-full btn-secondary justify-start">
-                <Palette className="w-4 h-4 mr-2" />
-                Theme
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end">
-        <button onClick={handleSave} className="btn-primary">
-          Save Changes
-        </button>
-      </div>
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>
+                Configure how you receive notifications.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Email Notifications</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Receive emails about new features and updates.
+                  </p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+              <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label className="text-base">Project Updates</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Get notified when your app generation is complete.
+                  </p>
+                </div>
+                <Switch defaultChecked />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button onClick={() => handleSave("Notification")}>Save Preferences</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
