@@ -5,6 +5,7 @@ import { Project, ProjectStatus } from '@/types';
 import { ProjectCard } from '@/components/ProjectCard';
 import { ProjectListItem } from '@/components/ProjectListItem';
 import { NewProjectDialog } from '@/components/NewProjectDialog';
+import { EditProjectDialog } from '@/components/EditProjectDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
@@ -30,6 +31,8 @@ export default function Projects() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filterStatus, setFilterStatus] = useState<ProjectStatus | 'all'>('all');
   const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState(false);
+  const [isEditProjectDialogOpen, setIsEditProjectDialogOpen] = useState(false);
+  const [selectedProjectForEdit, setSelectedProjectForEdit] = useState<Project | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -54,6 +57,12 @@ export default function Projects() {
   const handleAction = (action: string, projectId: number) => {
     if (action === 'Delete') {
       deleteMutation.mutate(projectId);
+    } else if (action === 'Edit') {
+      const projectToEdit = projects?.find(p => p.id === projectId);
+      if (projectToEdit) {
+        setSelectedProjectForEdit(projectToEdit);
+        setIsEditProjectDialogOpen(true);
+      }
     } else {
       toast({
         title: `Action: ${action}`,
@@ -75,6 +84,11 @@ export default function Projects() {
         open={isNewProjectDialogOpen} 
         onOpenChange={setIsNewProjectDialogOpen}
         onProjectCreated={() => queryClient.invalidateQueries({ queryKey: ['projects', user?.id] })}
+      />
+      <EditProjectDialog
+        project={selectedProjectForEdit}
+        open={isEditProjectDialogOpen}
+        onOpenChange={setIsEditProjectDialogOpen}
       />
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
