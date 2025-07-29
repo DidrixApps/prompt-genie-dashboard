@@ -1,19 +1,52 @@
 import { useState } from 'react';
-import { Send, Wand2, Save, Eye, Rocket, Sparkles, MessageSquare, Code } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Wand2, Eye, Rocket, Sparkles, MessageSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FormattedAIResponse from '@/components/FormattedAIResponse';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+
+const deployProject = async (projectId: number) => {
+  const { error } = await supabase
+    .from('projects')
+    .update({ status: 'deployed' })
+    .eq('id', projectId);
+
+  if (error) throw new Error(error.message);
+};
 
 export function AIPromptBuilder() {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [response, setResponse] = useState('');
   const [showTyping, setShowTyping] = useState(false);
+  const [newlyCreatedProjectId, setNewlyCreatedProjectId] = useState<number | null>(null);
+  
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  const deployMutation = useMutation({
+    mutationFn: deployProject,
+    onSuccess: (_, projectId) => {
+      toast({
+        title: "Deployment Started!",
+        description: "Your app is being deployed and will be live shortly.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['projects', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['project', projectId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['userStats', user?.id] });
+    },
+    onError: (err) => {
+      toast({
+        title: "Error deploying project",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleGenerate = async () => {
     if (!prompt.trim() || !user) {
@@ -28,8 +61,8 @@ export function AIPromptBuilder() {
     setIsGenerating(true);
     setShowTyping(true);
     setResponse('');
+    setNewlyCreatedProjectId(null);
 
-    // 1. Create the project in the database
     const { data: newProject, error } = await supabase
       .from('projects')
       .insert({
@@ -58,12 +91,13 @@ export function AIPromptBuilder() {
       description: `The project "${newProject.name}" is now in progress.`,
     });
 
-    // 2. Invalidate queries to refresh dashboard and project lists
+    setNewlyCreatedProjectId(newProject.id);
+
     await queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
     await queryClient.invalidateQueries({ queryKey: ['recentProjects', user.id] });
     await queryClient.invalidateQueries({ queryKey: ['projectCount', user.id] });
+    await queryClient.invalidateQueries({ queryKey: ['userStats', user.id] });
     
-    // 3. Simulate AI response
     setTimeout(() => {
       const mockResponse = `I'll help you build "${prompt}". Here's what I can create for you:
 
@@ -71,21 +105,18 @@ export function AIPromptBuilder() {
 • Modern React Native interface
 • User authentication system
 • Data persistence with local storage
-• Responsive design for all devices
 
 📱 **Core Features:**
 • Clean, intuitive user interface
 • Real-time data synchronization
 • Push notifications
-• Offline functionality
 
 🎨 **Design Elements:**
 • Modern Material Design
 • Custom color scheme
 • Smooth animations
-• Accessibility features
 
-This app will be production-ready with industry best practices. Would you like me to proceed with the development?`;
+This app will be production-ready. Would you like me to proceed?`;
       
       setResponse(mockResponse);
       setShowTyping(false);
@@ -93,11 +124,16 @@ This app will be production-ready with industry best practices. Would you like m
     }, 2000);
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Project saved!",
-      description: "Your AI app prompt has been saved to your projects.",
-    });
+  const handlePreview = () => {
+    if (newlyCreatedProjectId) {
+      navigate(`/projects/${newlyCreatedProjectId}/`);
+    }
+  };
+
+  const handleDeploy = () => {
+    if (newlyCreatedProjectId) {
+      deployMutation.mutate(newlyCreatedProjectId);
+    }
   };
 
   return (
@@ -142,7 +178,6 @@ This app will be production-ready with industry best practices. Would you like m
           </button>
         </div>
 
-        {/* Quick Suggestions */}
         <div className="mt-4">
           <p className="text-sm text-muted-foreground mb-2">Quick ideas:</p>
           <div className="flex flex-wrap gap-2">
@@ -194,21 +229,23 @@ This app will be production-ready with industry best practices. Would you like m
       {/* Action Buttons */}
       {response && !showTyping && (
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <button onClick={handleSave} className="btn-secondary flex items-center space-x-2">
-              <Save className="w-4 h-4" />
-              <span>Save Project</span>
-            </button>
-            
-            <button className="btn-secondary flex items-center space-x-2">
-              <Eye className="w-4 h-4" />
-              <span>Preview</span>
-            </button>
-          </div>
-
-          <button className="btn-primary flex items-center space-x-2">
-            <Rocket className="w-4 h-4" />
-            <span>Deploy App</span>
+          <button onClick={handlePreview} className="btn-secondary flex items-center space-x-2">
+            <Eye className="w-4 h-4" />
+            <span>Preview Project</span>
+          </button>
+          
+          <button onClick={handleDeploy} disabled={deployMutation.isPending} className="btn-primary flex items-center space-x-2">
+            {deployMutation.isPending ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Deploying...</span>
+              </>
+            ) : (
+              <>
+                <Rocket className="w-4 h-4" />
+                <span>Deploy App</span>
+              </>
+            )}
           </button>
         </div>
       )}
