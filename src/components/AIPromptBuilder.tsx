@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Send, Wand2, Save, Eye, Rocket, Sparkles, MessageSquare, Code } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FormattedAIResponse from '@/components/FormattedAIResponse';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function AIPromptBuilder() {
   const [prompt, setPrompt] = useState('');
@@ -9,9 +12,11 @@ export function AIPromptBuilder() {
   const [response, setResponse] = useState('');
   const [showTyping, setShowTyping] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) {
+    if (!prompt.trim() || !user) {
       toast({
         title: "Prompt required",
         description: "Please enter a prompt to generate your app.",
@@ -22,8 +27,43 @@ export function AIPromptBuilder() {
 
     setIsGenerating(true);
     setShowTyping(true);
+    setResponse('');
+
+    // 1. Create the project in the database
+    const { data: newProject, error } = await supabase
+      .from('projects')
+      .insert({
+        name: prompt.length > 50 ? prompt.substring(0, 47) + '...' : prompt,
+        description: 'AI-generated application.',
+        prompt: prompt,
+        user_id: user.id,
+        status: 'in-progress',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error creating project",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+      setShowTyping(false);
+      return;
+    }
+
+    toast({
+      title: "Project Created!",
+      description: `The project "${newProject.name}" is now in progress.`,
+    });
+
+    // 2. Invalidate queries to refresh dashboard and project lists
+    await queryClient.invalidateQueries({ queryKey: ['projects', user.id] });
+    await queryClient.invalidateQueries({ queryKey: ['recentProjects', user.id] });
+    await queryClient.invalidateQueries({ queryKey: ['projectCount', user.id] });
     
-    // Simulate AI response
+    // 3. Simulate AI response
     setTimeout(() => {
       const mockResponse = `I'll help you build "${prompt}". Here's what I can create for you:
 
