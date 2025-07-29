@@ -1,34 +1,46 @@
 import { useState } from 'react';
-import { Moon, Sun, Bell, User, Search, Zap } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { Moon, Sun, Bell, User, Search, Zap, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
-  onThemeToggle: () => void;
-  isDark: boolean;
+  onMobileNavToggle: () => void;
+  isMobile: boolean;
 }
 
-export function Topbar({ sidebarCollapsed, onThemeToggle, isDark }: TopbarProps) {
+export function Topbar({ sidebarCollapsed, onMobileNavToggle, isMobile }: TopbarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   return (
     <header
       className={cn(
         'fixed top-0 right-0 h-16 bg-card/80 backdrop-blur-xl border-b border-border z-30 transition-all duration-300',
-        sidebarCollapsed ? 'left-16' : 'left-64'
+        isMobile ? 'left-0' : (sidebarCollapsed ? 'left-16' : 'left-64')
       )}
     >
       <div className="flex items-center justify-between h-full px-6">
-        {/* Search Bar */}
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search projects, templates..."
-              className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-            />
+        <div className="flex items-center gap-4">
+          {isMobile && (
+            <button
+              onClick={onMobileNavToggle}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
+          {/* Search Bar */}
+          <div className="flex-1 max-w-md hidden sm:block">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search projects, templates..."
+                className="w-full pl-10 pr-4 py-2 bg-muted/50 border border-border rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+              />
+            </div>
           </div>
         </div>
 
@@ -36,10 +48,10 @@ export function Topbar({ sidebarCollapsed, onThemeToggle, isDark }: TopbarProps)
         <div className="flex items-center space-x-4">
           {/* Theme Toggle */}
           <button
-            onClick={onThemeToggle}
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
             className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
-            {isDark ? (
+            {theme === 'dark' ? (
               <Sun className="w-5 h-5 text-muted-foreground" />
             ) : (
               <Moon className="w-5 h-5 text-muted-foreground" />

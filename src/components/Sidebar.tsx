@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   Home,
   FolderOpen,
   Settings,
-  Menu,
   X,
   Smartphone,
   Zap,
@@ -26,21 +24,19 @@ const navigation = [
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  isMobile: boolean;
+  mobileNavOpen: boolean;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, isMobile, mobileNavOpen }: SidebarProps) {
   const location = useLocation();
+  const isCollapsed = isMobile ? false : collapsed;
 
-  return (
-    <div
-      className={cn(
-        'fixed left-0 top-0 h-full bg-card border-r border-border z-40 transition-all duration-300 glass-card',
-        collapsed ? 'w-16' : 'w-64'
-      )}
-    >
+  const sidebarContent = (
+    <>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-r from-primary to-[hsl(242,74%,62%)] rounded-xl flex items-center justify-center">
               <Smartphone className="w-5 h-5 text-white" />
@@ -52,7 +48,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           onClick={onToggle}
           className="p-2 rounded-lg hover:bg-muted transition-colors"
         >
-          {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          {isMobile ? <X className="w-5 h-5" /> : (isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />)}
         </button>
       </div>
 
@@ -65,6 +61,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <li key={item.name}>
                 <NavLink
                   to={item.href}
+                  onClick={isMobile ? onToggle : undefined}
                   className={cn(
                     'flex items-center px-3 py-3 text-sm font-medium rounded-xl transition-all duration-200 group',
                     isActive
@@ -78,10 +75,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'
                     )}
                   />
-                  {!collapsed && (
+                  {!isCollapsed && (
                     <span className="ml-3 truncate">{item.name}</span>
                   )}
-                  {isActive && !collapsed && (
+                  {isActive && !isCollapsed && (
                     <div className="ml-auto w-2 h-2 bg-primary-foreground rounded-full opacity-75" />
                   )}
                 </NavLink>
@@ -92,7 +89,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Bottom Section */}
-      {!collapsed && (
+      {!isCollapsed && (
         <div className="absolute bottom-4 left-4 right-4">
           <div className="glass-card p-4 rounded-xl">
             <div className="flex items-center space-x-3">
@@ -107,6 +104,39 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </div>
         </div>
       )}
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <div
+          className={cn(
+            'fixed inset-0 bg-black/50 z-40 transition-opacity duration-300',
+            mobileNavOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          )}
+          onClick={onToggle}
+        />
+        <div
+          className={cn(
+            'fixed left-0 top-0 h-full bg-card border-r border-border z-50 transition-all duration-300 glass-card w-64',
+            mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          {sidebarContent}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'fixed left-0 top-0 h-full bg-card border-r border-border z-40 transition-all duration-300 glass-card',
+        collapsed ? 'w-16' : 'w-64'
+      )}
+    >
+      {sidebarContent}
     </div>
   );
 }

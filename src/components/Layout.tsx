@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,33 +9,34 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    setIsDark(!isDark);
-    if (!isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+  const handleSidebarToggle = () => {
+    if (isMobile) {
+      setMobileNavOpen(!mobileNavOpen);
     } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+      setSidebarCollapsed(!sidebarCollapsed);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      <Topbar sidebarCollapsed={sidebarCollapsed} onThemeToggle={toggleTheme} isDark={isDark} />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={handleSidebarToggle}
+        isMobile={isMobile}
+        mobileNavOpen={mobileNavOpen}
+      />
+      <Topbar
+        sidebarCollapsed={sidebarCollapsed}
+        onMobileNavToggle={() => setMobileNavOpen(!mobileNavOpen)}
+        isMobile={isMobile}
+      />
       
-      <main className={`transition-all duration-300 pt-16 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <main className={`transition-all duration-300 pt-16 ${
+        isMobile ? 'ml-0' : (sidebarCollapsed ? 'ml-16' : 'ml-64')
+      }`}>
         <div className="p-6">
           {children}
         </div>
