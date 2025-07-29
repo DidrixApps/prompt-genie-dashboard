@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
+import ProjectDetails from "./pages/ProjectDetails";
 import Settings from "./pages/Settings";
 import Templates from "./pages/Templates";
 import Community from "./pages/Community";
@@ -29,6 +30,7 @@ const App = () => (
               <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/projects/" element={<Projects />} />
+                <Route path="/projects/:projectId/" element={<ProjectDetails />} />
                 <Route path="/templates/" element={<Templates />} />
                 <Route path="/community/" element={<Community />} />
                 <Route path="/settings/" element={<Settings />} />

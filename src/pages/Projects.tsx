@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Grid, List, Code, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Project, ProjectStatus } from '@/types';
@@ -36,6 +37,7 @@ export default function Projects() {
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const { data: projects, isLoading, error } = useQuery({
     queryKey: ['projects', user?.id],
@@ -55,7 +57,9 @@ export default function Projects() {
   });
 
   const handleAction = (action: string, projectId: number) => {
-    if (action === 'Delete') {
+    if (action === 'View') {
+      navigate(`/projects/${projectId}/`);
+    } else if (action === 'Delete') {
       deleteMutation.mutate(projectId);
     } else if (action === 'Edit') {
       const projectToEdit = projects?.find(p => p.id === projectId);
