@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   CheckSquare,
   MessageSquare,
@@ -10,8 +11,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { TemplatePreviewDialog, Template } from '@/components/TemplatePreviewDialog';
+import { useNavigate } from 'react-router-dom';
 
-const templates = [
+const templates: Template[] = [
   {
     title: 'Task Manager',
     description: 'A robust to-do list app with categories, priorities, and deadlines.',
@@ -52,47 +55,67 @@ const templates = [
 
 export default function Templates() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-  const handleUseTemplate = (title: string) => {
+  const handleUseTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    setIsPreviewOpen(true);
+  };
+
+  const handleConfirmTemplate = (template: Template) => {
+    setIsPreviewOpen(false);
     toast({
-      title: "Template selected!",
-      description: `The "${title}" template will be available soon.`,
+      title: "Template Confirmed!",
+      description: `Taking you to the builder with the "${template.title}" template.`,
     });
+    // In a real scenario, you would navigate and pass the template data
+    // For example: navigate('/', { state: { templatePrompt: template.description } });
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Templates</h1>
-        <p className="text-muted-foreground">
-          Start your next project with a pre-built template.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template) => (
-          <div key={template.title} className="glass-card rounded-xl p-6 flex flex-col hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                <template.icon className="w-6 h-6 text-primary" />
+    <>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Templates</h1>
+          <p className="text-muted-foreground">
+            Start your next project with a pre-built template.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {templates.map((template) => (
+            <div key={template.title} className="glass-card rounded-xl p-6 flex flex-col hover:shadow-lg transition-shadow duration-300">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                  <template.icon className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex gap-2">
+                  {template.tags.map(tag => (
+                    <Badge key={tag} variant="secondary">{tag}</Badge>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-2">
-                {template.tags.map(tag => (
-                  <Badge key={tag} variant="secondary">{tag}</Badge>
-                ))}
+              <div className="flex-grow">
+                <h3 className="font-semibold text-lg mb-2">{template.title}</h3>
+                <p className="text-muted-foreground text-sm">{template.description}</p>
+              </div>
+              <div className="mt-6">
+                <Button onClick={() => handleUseTemplate(template)} className="w-full">
+                  Use Template <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             </div>
-            <div className="flex-grow">
-              <h3 className="font-semibold text-lg mb-2">{template.title}</h3>
-              <p className="text-muted-foreground text-sm">{template.description}</p>
-            </div>
-            <div className="mt-6">
-              <Button onClick={() => handleUseTemplate(template.title)} className="w-full">
-                Use Template <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+
+      <TemplatePreviewDialog
+        template={selectedTemplate}
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        onConfirm={handleConfirmTemplate}
+      />
+    </>
   );
 }
