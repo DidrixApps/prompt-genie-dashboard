@@ -6,16 +6,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/Projects";
-import ProjectDetails from "./pages/ProjectDetails";
-import Settings from "./pages/Settings";
-import Templates from "./pages/Templates";
-import Community from "./pages/Community";
-import Support from "./pages/Support";
-import Analytics from "./pages/Analytics";
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
+import Dashboard from "@/pages/Dashboard";
+import Projects from "@/pages/Projects";
+import ProjectDetails from "@/pages/ProjectDetails";
+import Settings from "@/pages/Settings";
+import Templates from "@/pages/Templates";
+import Community from "@/pages/Community";
+import Support from "@/pages/Support";
+import Analytics from "@/pages/Analytics";
+import Login from "@/pages/Login";
+import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
