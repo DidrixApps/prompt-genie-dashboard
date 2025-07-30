@@ -11,3 +11,10 @@ export interface Project {
   framework: string | null;
   downloads: number;
 }
+
+export interface UserSettings {
+  id: string;
+  email_notifications_enabled: boolean;
+  project_updates_enabled: boolean;
+  openai_api_key: string | null;
+}
