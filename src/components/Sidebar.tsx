@@ -9,15 +9,19 @@ import {
   Code,
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LifeBuoy,
+  BarChart2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Analytics', href: '/analytics/', icon: BarChart2 },
   { name: 'Projects', href: '/projects/', icon: FolderOpen },
   { name: 'Templates', href: '/templates/', icon: Code },
   { name: 'Community', href: '/community/', icon: Users },
+  { name: 'Support', href: '/support/', icon: LifeBuoy },
   { name: 'Settings', href: '/settings/', icon: Settings },
 ];
 

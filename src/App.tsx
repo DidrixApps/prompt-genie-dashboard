@@ -12,6 +12,8 @@ import ProjectDetails from "./pages/ProjectDetails";
 import Settings from "./pages/Settings";
 import Templates from "./pages/Templates";
 import Community from "./pages/Community";
+import Support from "./pages/Support";
+import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +35,8 @@ const App = () => (
                 <Route path="/projects/:projectId/" element={<ProjectDetails />} />
                 <Route path="/templates/" element={<Templates />} />
                 <Route path="/community/" element={<Community />} />
+                <Route path="/support/" element={<Support />} />
+                <Route path="/analytics/" element={<Analytics />} />
                 <Route path="/settings/" element={<Settings />} />
               </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
